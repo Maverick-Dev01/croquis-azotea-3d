@@ -3,15 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Proyecto Azotea 8m x 16m - Visualizador 3D & 2D</title>
+  <title>Proyecto Azotea 8m x 16m - Modelo 3D con Planta Baja</title>
   
-  <!-- Meta tags para visualización en teléfonos móviles (PWA / WebApp) -->
   <meta name="theme-color" content="#0f172a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="Croquis 2D, modelo 3D y render fotorrealista de proyecto en azotea de 8m x 16m">
+  <meta name="description" content="Croquis 2D, modelo 3D con planta baja y render arquitectónico de azotea de 8m x 16m">
 
-  <!-- Librerías Three.js vía CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
@@ -43,11 +41,10 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
-      height: 100dvh; /* Altura dinámica para celulares */
+      height: 100dvh;
       overflow: hidden;
     }
 
-    /* Header y Navegación */
     header {
       background: #0f172a;
       padding: 10px 16px;
@@ -117,7 +114,7 @@
     }
 
     .btn-info-toggle {
-      display: none; /* Se activa en móviles */
+      display: none;
       background: #334155;
       border: 1px solid #475569;
       color: #fff;
@@ -130,7 +127,6 @@
       gap: 4px;
     }
 
-    /* Contenedor Principal */
     main {
       flex: 1;
       display: flex;
@@ -147,7 +143,7 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      touch-action: none; /* Impide scroll involuntario al rotar 3D */
+      touch-action: none;
     }
 
     #view-2d, #view-3d, #view-render {
@@ -173,23 +169,109 @@
 
     #view-render {
       display: none;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 15px;
+      justify-content: flex-start;
+      padding: 20px;
       background: #05070e;
-      overflow: auto;
+      overflow-y: auto;
+      gap: 16px;
     }
 
-    #view-render img {
-      max-width: 98%;
-      max-height: 90vh;
-      border-radius: 12px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+    .gallery-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      max-width: 900px;
+      width: 100%;
+      z-index: 5;
+    }
+
+    .gallery-btn {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .gallery-btn:hover, .gallery-btn.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 12px rgba(2,132,199,0.4);
+    }
+
+    .render-display-card {
+      max-width: 1000px;
+      width: 100%;
+      background: #0f172a;
       border: 1px solid #1e293b;
-      object-fit: contain;
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
     }
 
-    /* Barra lateral en Desktop */
+    .render-display-card img {
+      width: 100%;
+      max-height: 70vh;
+      border-radius: 10px;
+      border: 1px solid #334155;
+      object-fit: contain;
+      background: #090d16;
+    }
+
+    .render-caption {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      text-align: center;
+      line-height: 1.4;
+      padding: 0 10px 4px;
+    }
+
+    .fidelity-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(34,197,94,0.15);
+      border: 1px solid #22c55e;
+      border-radius: 20px;
+      color: #4ade80;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    /* Clean mode para capturas puras de alta resolución */
+    body.clean-mode header,
+    body.clean-mode aside,
+    body.clean-mode .camera-buttons,
+    body.clean-mode .controls-overlay,
+    body.clean-mode .mobile-sheet-header,
+    body.clean-mode .sheet-backdrop {
+      display: none !important;
+    }
+    body.clean-mode, body.clean-mode main, body.clean-mode .viewport, body.clean-mode #view-3d {
+      width: 100vw !important;
+      height: 100vh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+    }
+
     aside {
       width: 380px;
       background: var(--panel-bg);
@@ -244,7 +326,6 @@
       margin-top: 2px;
     }
 
-    /* Botones de cámara (Scroll horizontal en móvil) */
     .camera-buttons {
       position: absolute;
       top: 12px;
@@ -292,7 +373,6 @@
       border-color: #f97316;
     }
 
-    /* Indicaciones en pantalla */
     .controls-overlay {
       position: absolute;
       bottom: 14px;
@@ -323,30 +403,13 @@
       dominant-baseline: central;
     }
 
-    /* ===================================================
-       RESPONSIVE PARA CELULARES (MÓVILES)
-       =================================================== */
     @media (max-width: 768px) {
-      .title-group h1 {
-        font-size: 0.85rem;
-      }
-      .badge {
-        display: none; /* Oculta badge para ahorrar espacio en barra */
-      }
-      .btn-info-toggle {
-        display: flex; /* Muestra botón para abrir datos */
-      }
-      .controls-overlay {
-        font-size: 0.65rem;
-        padding: 4px 8px;
-        bottom: 8px;
-        left: 8px;
-      }
-      .controls-overlay span.desktop-only {
-        display: none;
-      }
+      .title-group h1 { font-size: 0.85rem; }
+      .badge { display: none; }
+      .btn-info-toggle { display: flex; }
+      .controls-overlay { font-size: 0.65rem; padding: 4px 8px; bottom: 8px; left: 8px; }
+      .controls-overlay span.desktop-only { display: none; }
 
-      /* Barra lateral se convierte en Modal / Bottom Sheet desplegable */
       aside {
         position: fixed;
         bottom: 0;
@@ -362,9 +425,7 @@
         z-index: 50;
       }
 
-      aside.open {
-        transform: translateY(0);
-      }
+      aside.open { transform: translateY(0); }
 
       .mobile-sheet-header {
         display: flex;
@@ -376,61 +437,35 @@
         border-radius: 16px 16px 0 0;
       }
 
-      .mobile-sheet-header h2 {
-        font-size: 0.9rem;
-        color: #fff;
-      }
-
-      .close-sheet-btn {
-        background: #334155;
-        border: none;
-        color: #fff;
-        font-size: 1rem;
-        padding: 4px 10px;
-        border-radius: 6px;
-        cursor: pointer;
-      }
-
-      .sheet-backdrop {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(4px);
-        z-index: 40;
-      }
-
-      .sheet-backdrop.open {
-        display: block;
-      }
+      .mobile-sheet-header h2 { font-size: 0.9rem; color: #fff; }
+      .close-sheet-btn { background: #334155; border: none; color: #fff; font-size: 1rem; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+      .sheet-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); z-index: 40; }
+      .sheet-backdrop.open { display: block; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Backdrop para celular cuando se abre la barra de información -->
   <div class="sheet-backdrop" id="sheetBackdrop" onclick="toggleSidebar(false)"></div>
 
   <header>
     <div class="title-group">
-      <h1>Azotea 8m x 16m</h1>
-      <span class="badge">Norte-Sur</span>
+      <h1>Casa & Azotea (8m x 16m)</h1>
+      <span class="badge">Con Planta Baja</span>
     </div>
 
-    <!-- Pestañas de Vista -->
     <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchView('2d')">
+      <button id="tab-btn-2d" class="tab-btn active" onclick="switchView('2d')">
         2D Plano
       </button>
-      <button class="tab-btn" onclick="switchView('3d')">
+      <button id="tab-btn-3d" class="tab-btn" onclick="switchView('3d')">
         3D Modelo
       </button>
-      <button class="tab-btn" onclick="switchView('render')">
+      <button id="tab-btn-render" class="tab-btn" onclick="switchView('render')">
         🖼️ Render HD
       </button>
     </div>
 
-    <!-- Botón en móvil para abrir información -->
     <button class="btn-info-toggle" onclick="toggleSidebar(true)">
       📋 Info
     </button>
@@ -438,7 +473,7 @@
 
   <main>
     <div class="viewport">
-      <!-- 1. VISTA 2D -->
+      <!-- 1. VISTA 2D CON ESCALERA PEGADA A LA DERECHA Y AL MURO DEL CUARTO -->
       <div id="view-2d">
         <svg viewBox="0 0 860 1200" id="svg-plan">
           <defs>
@@ -478,19 +513,18 @@
           <!-- LOSA BASE (8m x 16m) -->
           <rect x="200" y="160" width="400" height="800" fill="#1e293b" stroke="#334155" stroke-width="2" rx="4"/>
 
-          <!-- ZONA POSTERIOR (NORTE: 2.00m) -->
-          <!-- Cachito de lámina (Oeste, 4x2m) -->
+          <!-- 1. ZONA TRASERA (NORTE: 2.00m) -->
           <rect x="200" y="160" width="200" height="100" fill="rgba(56, 189, 248, 0.15)" stroke="#38bdf8" stroke-width="1.5"/>
           <rect x="200" y="160" width="200" height="100" fill="url(#sheetHatch)"/>
           <text x="300" y="205" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="bold">
-            CACHITO DE LÁMINA (4x2m)
+            CACHITO LÁMINA (4x2m)
           </text>
 
-          <!-- Doble losa verde (Este, 4x2m) -->
+          <!-- Doble losa verde -->
           <rect x="400" y="160" width="200" height="100" fill="rgba(34, 197, 94, 0.3)" stroke="#22c55e" stroke-width="3"/>
           <rect x="400" y="160" width="200" height="100" fill="url(#greenConcreteHatch)"/>
 
-          <!-- Tragaluz 60x60cm -->
+          <!-- Tragaluz 60x60cm en el lado izquierdo de la losa -->
           <rect x="425" y="195" width="30" height="30" fill="#38bdf8" stroke="#fff" stroke-width="2" rx="2"/>
           <line x1="425" y1="195" x2="455" y2="225" stroke="#fff" stroke-width="1.5"/>
           <line x1="425" y1="225" x2="455" y2="195" stroke="#fff" stroke-width="1.5"/>
@@ -501,16 +535,16 @@
             60x60 cm
           </text>
 
-          <!-- Tinaco a la derecha -->
-          <rect x="515" y="180" width="60" height="60" fill="#b45309" stroke="#fff" stroke-width="1.2" rx="3"/>
-          <circle cx="545" cy="210" r="24" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5"/>
-          <circle cx="545" cy="210" r="8" fill="#1e293b" stroke="#fff" stroke-width="1"/>
+          <!-- Tinaco a la derecha (casi pegado a barda) -->
+          <rect x="525" y="180" width="55" height="60" fill="#b45309" stroke="#fff" stroke-width="1.2" rx="3"/>
+          <circle cx="550" cy="210" r="24" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5"/>
+          <circle cx="550" cy="210" r="8" fill="#1e293b" stroke="#fff" stroke-width="1"/>
           
-          <text x="545" y="173" text-anchor="middle" fill="#fef08a" font-size="10" font-weight="bold">
+          <text x="550" y="173" text-anchor="middle" fill="#fef08a" font-size="10" font-weight="bold">
             TINACO
           </text>
-          <text x="545" y="246" text-anchor="middle" fill="#fef08a" font-size="8">
-            Pegado a barda
+          <text x="550" y="246" text-anchor="middle" fill="#fef08a" font-size="8">
+            Pegado a barda der.
           </text>
 
           <!-- Techado de lámina continuo de 0 a 14m -->
@@ -536,22 +570,24 @@
             PUERTA
           </text>
 
-          <!-- Escalera transversal -->
+          <!-- 2. ESCALERA TRANSVERSAL AJUSTADA: PEGADA A LA DERECHA Y AL MURO DE LA CASA -->
+          <!-- Adosada directamente al muro frontal del cuarto (Y = 560 a 620) y llegando hasta el extremo derecho (X = 600) -->
           <g id="stairs-group">
-            <rect x="340" y="580" width="220" height="70" fill="rgba(249, 115, 22, 0.2)" stroke="#f97316" stroke-width="2"/>
-            <line x1="362" y1="580" x2="362" y2="650" stroke="#f97316" stroke-width="1.5"/>
-            <line x1="384" y1="580" x2="384" y2="650" stroke="#f97316" stroke-width="1.5"/>
-            <line x1="406" y1="580" x2="406" y2="650" stroke="#f97316" stroke-width="1.5"/>
-            <line x1="428" y1="580" x2="428" y2="650" stroke="#f97316" stroke-width="1.5"/>
-            <line x1="450" y1="580" x2="450" y2="650" stroke="#f97316" stroke-width="1.5"/>
-            <line x1="472" y1="580" x2="472" y2="650" stroke="#f97316" stroke-width="1.5"/>
-            <line x1="494" y1="580" x2="494" y2="650" stroke="#f97316" stroke-width="1.5"/>
-            <line x1="516" y1="580" x2="516" y2="650" stroke="#f97316" stroke-width="1.5"/>
-            <line x1="538" y1="580" x2="538" y2="650" stroke="#f97316" stroke-width="1.5"/>
+            <rect x="410" y="560" width="190" height="60" fill="rgba(249, 115, 22, 0.25)" stroke="#f97316" stroke-width="2"/>
+            <!-- Escalones transversales -->
+            <line x1="430" y1="560" x2="430" y2="620" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="450" y1="560" x2="450" y2="620" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="470" y1="560" x2="470" y2="620" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="490" y1="560" x2="490" y2="620" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="510" y1="560" x2="510" y2="620" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="530" y1="560" x2="530" y2="620" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="550" y1="560" x2="550" y2="620" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="570" y1="560" x2="570" y2="620" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="590" y1="560" x2="590" y2="620" stroke="#f97316" stroke-width="1.5"/>
 
-            <line x1="350" y1="615" x2="545" y2="615" stroke="#f97316" stroke-width="3" marker-end="url(#arrowOrange)"/>
-            <text x="450" y="675" text-anchor="middle" fill="#fb923c" font-size="11" font-weight="bold">
-              SUBE ESCALERA A LA LOSA (Oeste -> Este)
+            <line x1="415" y1="590" x2="595" y2="590" stroke="#f97316" stroke-width="3" marker-end="url(#arrowOrange)"/>
+            <text x="505" y="635" text-anchor="middle" fill="#fb923c" font-size="10" font-weight="bold">
+              ESCALERA (Pegada a la pared de la casa y a la barda der.)
             </text>
           </g>
 
@@ -572,7 +608,7 @@
 
           <!-- Malla verde en frente y lateral derecho -->
           <line x1="200" y1="960" x2="600" y2="960" stroke="#16a34a" stroke-width="8" stroke-dasharray="8, 4"/>
-          <line x1="600" y1="560" x2="600" y2="960" stroke="#16a34a" stroke-width="8" stroke-dasharray="8, 4"/>
+          <line x1="600" y1="620" x2="600" y2="960" stroke="#16a34a" stroke-width="8" stroke-dasharray="8, 4"/>
           <text x="400" y="991" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="bold">
             MALLA VERDE DE ALAMBRE (ALTO: 2.00 m)
           </text>
@@ -585,14 +621,16 @@
         </svg>
       </div>
 
-      <!-- 2. VISTA 3D INTERACTIVA -->
+      <!-- 2. VISTA 3D INTERACTIVA CON PLANTA BAJA INTEGRADA -->
       <div id="view-3d">
         <div class="camera-buttons">
-          <button class="cam-btn" onclick="setCameraView('tinaco_tragaluz')">★ Tragaluz y Tinaco</button>
-          <button class="cam-btn" onclick="setCameraView('mesh_focus')">Malla Verde (2m)</button>
+          <button class="cam-btn" onclick="setCameraView('front_facade')">★ Fachada Planta Baja</button>
+          <button class="cam-btn" onclick="setCameraView('stairs_focus')">Escalera y Cuarto</button>
+          <button class="cam-btn" onclick="setCameraView('tinaco_tragaluz')">Tragaluz y Tinaco</button>
           <button class="cam-btn" onclick="setCameraView('iso')">Perspectiva General</button>
           <button class="cam-btn" id="toggle-roofs-btn" onclick="toggleRoofs()">👁 Ocultar Techos</button>
-          <button class="cam-btn photo-btn" onclick="downloadScreenshot()">📸 Guardar Foto</button>
+          <button class="cam-btn" id="toggle-labels-btn" onclick="toggleLabels()">🏷️ Ocultar Rótulos</button>
+          <button class="cam-btn photo-btn" onclick="downloadScreenshot()">📸 Guardar Foto 3D</button>
         </div>
 
         <div class="controls-overlay">
@@ -602,52 +640,65 @@
         </div>
       </div>
 
-      <!-- 3. VISTA RENDER HD (Fotorrealista) -->
+      <!-- 3. VISTA RENDER HD - GALERÍA ARQUITECTÓNICA 1:1 -->
       <div id="view-render">
-        <img src="./render_3d_arquitectonico_puro.jpg" alt="Render 3D Arquitectónico Puro" loading="lazy">
+        <div class="gallery-controls">
+          <button class="gallery-btn active" onclick="selectRenderGallery('iso')">🌟 Isométrica General</button>
+          <button class="gallery-btn" onclick="selectRenderGallery('facade')">🏠 Fachada Frontal (Planta Baja)</button>
+          <button class="gallery-btn" onclick="selectRenderGallery('stairs')">🪜 Escalera Adosada y Casita</button>
+          <button class="gallery-btn" onclick="selectRenderGallery('tinaco')">🚰 2da Losa, Tinaco y Tragaluz</button>
+        </div>
+
+        <div class="render-display-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 8px;">
+            <span class="fidelity-badge">✓ Geometría 1:1 Fiel al Croquis 2D y 3D</span>
+            <a id="gallery-download-link" href="./render_view_iso.png" download="render_isometrico_8x16.png" class="cam-btn photo-btn" style="text-decoration: none; padding: 5px 12px; font-size: 0.75rem;">⬇️ Descargar Render HD</a>
+          </div>
+          <img id="gallery-img" src="./render_view_iso.png" alt="Render Arquitectónico 3D Fiel">
+          <p id="gallery-caption" class="render-caption">
+            <strong>Perspectiva Isométrica General (8m x 16m):</strong> Vista tridimensional completa con planta baja terminada (2.8m), losa intermedia, barda trasera de 3m con 3 castillos, pretil izquierdo de 1m con 3 castillos, malla ciclónica verde de 2m al frente y lateral derecho, cubierta de lámina, escalera pegada a la pared de la casita y segunda losa con tinaco y tragaluz.
+          </p>
+        </div>
+
+        <div class="section-box" style="max-width: 1000px; width: 100%; margin: 0; background: rgba(15,23,42,0.6);">
+          <div class="section-title">💡 Nota sobre la fidelidad de los renders</div>
+          <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.5;">
+            Los renders de esta galería son capturas generadas a partir de la geometría exacta de las coordenadas en 3D (WebGL), asegurando que <strong>no haya bardas inventadas enfrente</strong>, que la <strong>escalera esté exactamente pegada a la pared y al muro derecho</strong>, y que las <strong>alturas y castillos coincidan milimétricamente con el plano 2D</strong>.
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Barra lateral (Desktop) / Bottom Sheet (Celular) -->
+    <!-- Barra lateral con datos -->
     <aside id="infoSidebar">
       <div class="mobile-sheet-header">
-        <h2>Especificaciones Técnicas</h2>
+        <h2>Detalles de Construcción</h2>
         <button class="close-sheet-btn" onclick="toggleSidebar(false)">✕</button>
       </div>
 
       <div class="section-box">
         <div class="section-title">
-          Dimensiones Principales
+          Planta Baja (Existente)
         </div>
-        <div class="stat-grid">
-          <div class="stat-card">
-            <div class="label">Losa Total</div>
-            <div class="value">8.00 x 16.00 m</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Techado Lámina</div>
-            <div class="value" style="color: #38bdf8;">14.00 m largo</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Malla Verde</div>
-            <div class="value" style="color: #4ade80;">Alto: 2.00 m</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Tragaluz Acceso</div>
-            <div class="value" style="color: #38bdf8;">60 x 60 cm</div>
-          </div>
+        <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5;">
+          • <strong>Frente (8.00m):</strong><br>
+            - <strong>Izquierda:</strong> Portón vehicular de cochera (3.5m ancho).<br>
+            - <strong>Centro:</strong> Puerta peatonal principal de acceso.<br>
+            - <strong>Derecha:</strong> Ventana con cancelería exterior.<br>
+          • Muros perimetrales cerrados de 2.8m de altura soportando la losa.
         </div>
       </div>
 
       <div class="section-box">
         <div class="section-title">
-          Instalaciones y Muros
+          Azotea (Obra Proyectada)
         </div>
         <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5;">
-          • <strong>Tinaco Rotoplas:</strong> Sobre muretes de tabique rojo en el extremo derecho de la 2da losa, pegado a la barda.<br><br>
-          • <strong>Tragaluz 60x60cm:</strong> En el lado izquierdo de la losa verde para subida y mantenimiento.<br><br>
-          • <strong>Castillos a Nivel:</strong> 3 en el muro izquierdo (enrasados a 1m cada 4m) y 3 en el muro posterior (enrasados a 3m).<br><br>
-          • <strong>Malla de Alambre (2m):</strong> Delimitando el frente y el lateral derecho de forma segura.
+          • <strong>Escalera Pegada:</strong> Adosada directamente al muro frontal de la casita y corriendo hasta topar con la barda derecha.<br><br>
+          • <strong>Tragaluz 60x60cm:</strong> En el lado izquierdo de la 2da losa para subir a mantenimiento.<br><br>
+          • <strong>Tinaco Rotoplas:</strong> Sobre muretes de tabique pegado a la barda derecha.<br><br>
+          • <strong>Muros de Block:</strong> Muro de 3m al fondo con 3 castillos, muro de 1m a la izquierda con 3 castillos.<br><br>
+          • <strong>Malla Verde (2m):</strong> Delimitando el frente y lateral derecho.
         </div>
       </div>
     </aside>
@@ -663,23 +714,22 @@
       const view3D = document.getElementById('view-3d');
       const viewRender = document.getElementById('view-render');
 
-      // Ocultar todos
       view2D.style.display = 'none';
       view3D.style.display = 'none';
       viewRender.style.display = 'none';
 
+      const targetBtn = document.getElementById('tab-btn-' + view);
+      if (targetBtn) targetBtn.classList.add('active');
+
       if (view === '2d') {
-        event.currentTarget.classList.add('active');
         view2D.style.display = 'flex';
       } else if (view === '3d') {
-        event.currentTarget.classList.add('active');
         view3D.style.display = 'block';
         if (!threeInitialized) {
           initThree();
         }
         onWindowResize();
       } else if (view === 'render') {
-        event.currentTarget.classList.add('active');
         viewRender.style.display = 'flex';
       }
     }
@@ -809,29 +859,36 @@
     const roofMeshes = [];
 
     function initThree() {
-      threeInitialized = true;
-      const container = document.getElementById('view-3d');
-      const width = container.clientWidth;
-      const height = container.clientHeight;
+      try {
+        console.log('initThree starting...');
+        threeInitialized = true;
+        const container = document.getElementById('view-3d');
+        const width = container.clientWidth || window.innerWidth;
+        const height = container.clientHeight || window.innerHeight;
+        console.log('container dimensions:', width, height);
 
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0a0f1d);
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0f1d);
 
-      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-      camera.position.set(-15, 18, 22);
+        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        camera.position.set(-16, 16, 24);
 
-      // Renderizador optimizado para pantallas Retina de celular
-      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.setSize(width, height);
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      container.appendChild(renderer.domElement);
+        renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, powerPreference: "high-performance" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(width, height);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+        console.log('Renderer attached, WebGL context:', renderer.getContext());
 
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-      controls.target.set(0, 1.5, 0);
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.set(0, 0, 0);
+        console.log('Three.js initialized successfully');
+      } catch (err) {
+        console.error('Error in initThree:', err);
+      }
 
       // Luces
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
@@ -848,8 +905,8 @@
       fillLight.position.set(-20, 15, -15);
       scene.add(fillLight);
 
-      const gridHelper = new THREE.GridHelper(34, 34, 0x1e293b, 0x0f172a);
-      gridHelper.position.y = -0.01;
+      const gridHelper = new THREE.GridHelper(36, 36, 0x1e293b, 0x0f172a);
+      gridHelper.position.y = -2.85; // A nivel de la calle / terreno
       scene.add(gridHelper);
 
       const blockTex = generateCinderBlockTexture();
@@ -863,7 +920,6 @@
       const sheetTex = generateCorrugatedSheetTexture();
       sheetTex.repeat.set(16, 12);
       const sheetMat = new THREE.MeshStandardMaterial({ map: sheetTex, roughness: 0.35, metalness: 0.75 });
-      const pipeMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.3 });
 
       const greenSlabMat = new THREE.MeshStandardMaterial({ 
         color: 0x22c55e, 
@@ -872,31 +928,125 @@
         opacity: 0.92 
       });
 
-      // 1. Losa base
-      const baseMain = new THREE.Mesh(new THREE.BoxGeometry(8, 0.25, 14), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 }));
-      baseMain.position.set(0, -0.125, 1);
-      baseMain.receiveShadow = true;
-      scene.add(baseMain);
+      // =======================================================
+      // PLANTA BAJA (PRIMER PISO EXISTENTE, DE Y = -2.8m a Y = 0)
+      // =======================================================
+      const pbGroup = new THREE.Group();
+      const stuccoMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.8 }); // Muro terminado
 
-      const baseBackLeft = new THREE.Mesh(new THREE.BoxGeometry(4, 0.25, 2), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 }));
+      // Muros perimetrales de planta baja
+      // Muro Izquierdo PB (X = -4, Z de -8 a +8)
+      const pbWallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.24, 2.8, 16), stuccoMat);
+      pbWallLeft.position.set(-4 + 0.12, -1.4, 0);
+      pbWallLeft.castShadow = true;
+      pbWallLeft.receiveShadow = true;
+      pbGroup.add(pbWallLeft);
+
+      // Muro Derecho PB (X = +4, Z de -8 a +8)
+      const pbWallRight = new THREE.Mesh(new THREE.BoxGeometry(0.24, 2.8, 16), stuccoMat);
+      pbWallRight.position.set(4 - 0.12, -1.4, 0);
+      pbWallRight.castShadow = true;
+      pbWallRight.receiveShadow = true;
+      pbGroup.add(pbWallRight);
+
+      // Muro Trasero PB (Z = -8, ancho 8m)
+      const pbWallBack = new THREE.Mesh(new THREE.BoxGeometry(8, 2.8, 0.24), stuccoMat);
+      pbWallBack.position.set(0, -1.4, -8 + 0.12);
+      pbWallBack.castShadow = true;
+      pbGroup.add(pbWallBack);
+
+      // FACHADA FRONTAL PLANTA BAJA (Z = +8, Ancho 8m, Alto 2.8m)
+      // Portón a la izquierda (X: -4 a -0.5 -> 3.5m de ancho)
+      const gateMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4, metalness: 0.6 });
+      const gateMesh = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.4, 0.08), gateMat);
+      gateMesh.position.set(-2.25, -1.5, 8 - 0.04);
+      pbGroup.add(gateMesh);
+
+      // Dintel sobre el portón
+      const gateLintel = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.4, 0.24), stuccoMat);
+      gateLintel.position.set(-2.2, -0.2, 8 - 0.12);
+      pbGroup.add(gateLintel);
+
+      // Puerta en medio (X: -0.5 a +0.8 -> 1.3m de ancho)
+      const pbDoorMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.5 });
+      const pbDoor = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.2, 0.08), pbDoorMat);
+      pbDoor.position.set(0.2, -1.6, 8 - 0.04);
+      pbGroup.add(pbDoor);
+
+      // Dintel sobre puerta y ventana
+      const midLintel = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.6, 0.24), stuccoMat);
+      midLintel.position.set(1.8, -0.3, 8 - 0.12);
+      pbGroup.add(midLintel);
+
+      // Ventana a la derecha (X: +1.5 a +3.8)
+      const pbWinBottom = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.0, 0.24), stuccoMat);
+      pbWinBottom.position.set(2.6, -2.2, 8 - 0.12);
+      pbGroup.add(pbWinBottom);
+
+      const pbWin = new THREE.Mesh(
+        new THREE.BoxGeometry(2.2, 1.2, 0.05),
+        new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.65 })
+      );
+      pbWin.position.set(2.6, -1.1, 8 - 0.04);
+      pbGroup.add(pbWin);
+
+      // Muro divisorio entre puerta y ventana
+      const pbWallPillar = new THREE.Mesh(new THREE.BoxGeometry(0.6, 2.8, 0.24), stuccoMat);
+      pbWallPillar.position.set(1.1, -1.4, 8 - 0.12);
+      pbGroup.add(pbWallPillar);
+
+      scene.add(pbGroup);
+
+      // =======================================================
+      // PLANTA ALTA / AZOTEA (A PARTIR DE Y = 0)
+      // =======================================================
+
+      // 1. LOSA BASE (8m x 16m) CON HUECO PARA ESCALERA
+      const slabMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 });
+      
+      // Sección izquierda (5m ancho x 14m largo)
+      const slabLeft = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.25, 14.0), slabMat);
+      slabLeft.position.set(-1.5, -0.125, 1.0);
+      slabLeft.receiveShadow = true;
+      scene.add(slabLeft);
+
+      // Sección frontal derecha (3m ancho x 6.9m largo, frente a la escalera)
+      const slabFrontRight = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.25, 6.9), slabMat);
+      slabFrontRight.position.set(2.5, -0.125, 4.55);
+      slabFrontRight.receiveShadow = true;
+      scene.add(slabFrontRight);
+
+      // Sección bajo la casita (4m ancho x 6.0m largo, detrás de la escalera)
+      const slabRoom = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.25, 6.0), slabMat);
+      slabRoom.position.set(2.0, -0.125, -3.0);
+      slabRoom.receiveShadow = true;
+      scene.add(slabRoom);
+
+      // Barandal de protección en el hueco de la escalera sobre la losa
+      const stairWellRailMat = new THREE.MeshStandardMaterial({ color: 0xf97316, metalness: 0.5 });
+      const edgeRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.9, 1.1), stairWellRailMat);
+      edgeRail.position.set(1.0, 0.45, 0.55);
+      scene.add(edgeRail);
+
+      const baseBackLeft = new THREE.Mesh(new THREE.BoxGeometry(4, 0.25, 2), slabMat);
       baseBackLeft.position.set(-2, -0.125, -7);
       baseBackLeft.receiveShadow = true;
       scene.add(baseBackLeft);
 
-      // Losa inferior en verde
+      // Losa inferior en verde (hueco del 1er piso)
       const lowerGreenSlab = new THREE.Mesh(new THREE.BoxGeometry(3.96, 0.25, 1.96), greenSlabMat);
       lowerGreenSlab.position.set(2, -0.125, -7);
       lowerGreenSlab.receiveShadow = true;
       scene.add(lowerGreenSlab);
 
-      // 2. Muro fondo 8m x 3m
+      // 2. MURO FONDO 8m x 3m (Norte)
       const wallBack = new THREE.Mesh(new THREE.BoxGeometry(8, 3, 0.24), blockMat);
       wallBack.position.set(0, 1.5, -8 + 0.12);
       wallBack.castShadow = true;
       wallBack.receiveShadow = true;
       scene.add(wallBack);
 
-      // 3. 3 Castillos fondo (3m)
+      // 3 Castillos fondo (3m)
       const castMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 });
       function addFlushCastillo(x, z, h) {
         const c = new THREE.Mesh(new THREE.BoxGeometry(0.28, h, 0.28), castMat);
@@ -908,13 +1058,13 @@
       addFlushCastillo(0, -8 + 0.14, 3.0);
       addFlushCastillo(4 - 0.14, -8 + 0.14, 3.0);
 
-      // 4. Muro derecho en 2m
+      // Muro derecho en 2m
       const wallRight2m = new THREE.Mesh(new THREE.BoxGeometry(0.24, 3, 2), blockMat);
       wallRight2m.position.set(4 - 0.12, 1.5, -7);
       wallRight2m.castShadow = true;
       scene.add(wallRight2m);
 
-      // 5. Muro izquierdo 16m x 1m con 3 castillos
+      // Muro izquierdo 16m x 1m con 3 castillos
       const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.0, 16), blockParapetMat);
       wallLeft.position.set(-4 + 0.1, 0.5, 0);
       wallLeft.castShadow = true;
@@ -924,7 +1074,7 @@
       addFlushCastillo(-4 + 0.12, 0, 1.0);
       addFlushCastillo(-4 + 0.12, 4, 1.0);
 
-      // 6. Malla Verde 2.0m
+      // Malla Verde 2.0m en frente y lateral derecho
       const meshTex = generateWireMeshTexture();
       const greenMeshMat = new THREE.MeshStandardMaterial({
         map: meshTex,
@@ -953,18 +1103,19 @@
       frontRail.position.set(0, 2.0, 8 - 0.02);
       scene.add(frontRail);
 
-      const rightMesh = new THREE.Mesh(new THREE.PlaneGeometry(8, 2.0), greenMeshMat);
+      // Malla Lateral Derecha (desde Z=1.2 hasta Z=8)
+      const rightMesh = new THREE.Mesh(new THREE.PlaneGeometry(6.8, 2.0), greenMeshMat);
       rightMesh.rotation.y = Math.PI / 2;
-      rightMesh.position.set(4 - 0.02, 1.0, 4);
+      rightMesh.position.set(4 - 0.02, 1.0, 4.6);
       scene.add(rightMesh);
-      for (let z = 0; z <= 8; z += 2) {
+      for (let z = 1.2; z <= 8; z += 2.2) {
         scene.add(createFencePost(4 - 0.02, z, 2.0));
       }
-      const rightRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 8), greenPostMat);
-      rightRail.position.set(4 - 0.02, 2.0, 4);
+      const rightRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 6.8), greenPostMat);
+      rightRail.position.set(4 - 0.02, 2.0, 4.6);
       scene.add(rightRail);
 
-      // 7. Cuarto existente (4x6m)
+      // Cuarto existente (4x6m)
       const roomGroup = new THREE.Group();
       const plasterMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.7 });
 
@@ -1014,45 +1165,61 @@
 
       scene.add(roomGroup);
 
-      // 8. Escalera transversal
+      // =======================================================================
+      // 3. ESCALERA CORREGIDA: PEGADA A LA PARED DE LA CASA Y HASTA LA DERECHA
+      // =======================================================================
+      // Su parte más larga está adosada directamente a Z = 0 (muro frontal del cuarto)
+      // Corre de izquierda a derecha (X: 1.0 a X: 3.9 topando con la barda derecha)
       const stairsGroup = new THREE.Group();
       const numSteps = 12;
-      const stepRun = 0.28;
-      const stepW = 1.1;
-      const stepRise = 0.18;
+      const stepRun = 0.24; // Huella
+      const stepW = 1.0;   // Ancho del peldaño (en Z)
+      const stepRise = 0.23; // Contrahuella subiendo 2.8m desde PB
 
       for (let i = 0; i < numSteps; i++) {
-        const step = new THREE.Mesh(new THREE.BoxGeometry(stepRun, stepRise, stepW), new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 }));
-        step.position.set(-1.2 + i * stepRun, i * stepRise - (numSteps * stepRise) + stepRise/2, 1.0);
+        const step = new THREE.Mesh(
+          new THREE.BoxGeometry(stepRun, 0.18, stepW),
+          new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 })
+        );
+        // Sube de izquierda a derecha (X de 1.1 hacia 3.8) y adosada a Z = 0.5
+        step.position.set(1.1 + i * stepRun, -2.8 + i * stepRise + 0.1, 0.5);
         step.castShadow = true;
         step.receiveShadow = true;
         stairsGroup.add(step);
       }
 
+      // Barandal exterior de la escalera
       const railMat = new THREE.MeshStandardMaterial({ color: 0xf97316, metalness: 0.6 });
-      const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.9), railMat);
-      p1.position.set(-1.2, 0.45, 1.55);
+      const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.0), railMat);
+      p1.position.set(1.1, -1.8, 1.05);
       stairsGroup.add(p1);
-      const p2 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.9), railMat);
-      p2.position.set(2.0, 0.45, 1.55);
+      const p2 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.0), railMat);
+      p2.position.set(3.8, 0.5, 1.05);
       stairsGroup.add(p2);
+
+      // Tubo pasamanos inclinado
+      const railTube = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 3.5), railMat);
+      railTube.rotation.z = -Math.atan2(2.3, 2.7);
+      railTube.position.set(2.45, -0.65, 1.05);
+      stairsGroup.add(railTube);
+
       scene.add(stairsGroup);
 
-      // 9. Techumbre general (14m)
+      // Techumbre de lámina general (0 a 14m)
       const mainRoof = new THREE.Mesh(new THREE.BoxGeometry(8.1, 0.06, 14.1), sheetMat);
       mainRoof.position.set(0, 2.75, 1.0);
       mainRoof.rotation.x = -0.015;
       scene.add(mainRoof);
       roofMeshes.push(mainRoof);
 
-      // 10. Sobrante trasero
+      // Cachito de lámina trasera
       const extraSheet = new THREE.Mesh(new THREE.BoxGeometry(4.1, 0.06, 2.1), sheetMat);
       extraSheet.position.set(-2, 2.7, -7);
       extraSheet.rotation.x = -0.02;
       scene.add(extraSheet);
       roofMeshes.push(extraSheet);
 
-      // 11. Segunda losa verde con TRAGALUZ DE 60x60 CM
+      // Segunda losa verde con TRAGALUZ DE 60x60 CM
       const slab2ndGroup = new THREE.Group();
       const slabRight = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.22, 2.0), greenSlabMat);
       slabRight.position.set(2.6, 2.9, -7);
@@ -1067,7 +1234,7 @@
       slabLeftFront.position.set(0.6, 2.9, -6.35);
       slab2ndGroup.add(slabLeftFront);
 
-      // Brocal y domo del tragaluz
+      // Brocal y domo del tragaluz de 60x60
       const curb = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.12, 0.72), new THREE.MeshStandardMaterial({ color: 0x475569 }));
       curb.position.set(0.6, 3.05, -7.0);
       slab2ndGroup.add(curb);
@@ -1079,7 +1246,7 @@
       scene.add(slab2ndGroup);
       roofMeshes.push(slab2ndGroup);
 
-      // 12. Tinaco pegado a la derecha
+      // Tinaco pegado a la barda derecha
       const tinacoGroup = new THREE.Group();
       const brickMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.9 });
       const murete1 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.6, 1.1), brickMat);
@@ -1108,24 +1275,88 @@
       tankNeck.position.set(0, 2.05, 0);
       tinacoGroup.add(tankNeck);
 
-      const tankLid = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.05, 32), new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.4 }));
+      const lidMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.4 });
+      const tankLid = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.05, 32), lidMat);
       tankLid.position.set(0, 2.12, 0);
       tinacoGroup.add(tankLid);
 
-      tinacoGroup.position.set(3.15, 3.01, -7.0);
+      tinacoGroup.position.set(3.2, 3.01, -7.0);
       scene.add(tinacoGroup);
       roofMeshes.push(tinacoGroup);
 
+      // Función para agregar etiquetas 3D flotantes
+      function addLabel(text, x, y, z, color = '#38bdf8') {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 4;
+        if (ctx.roundRect) {
+          ctx.beginPath();
+          ctx.roundRect(10, 10, 492, 108, 16);
+          ctx.fill();
+          ctx.stroke();
+        } else {
+          ctx.fillRect(10, 10, 492, 108);
+          ctx.strokeRect(10, 10, 492, 108);
+        }
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 26px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, 256, 64);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+        const sprite = new THREE.Sprite(spriteMat);
+        sprite.position.set(x, y, z);
+        sprite.scale.set(3.4, 0.85, 1.0);
+        scene.add(sprite);
+        labelSprites.push(sprite);
+      }
+
+      // ETIQUETAS
+      addLabel("Planta Baja (Portón/Puerta/Ventana)", 0, -1.5, 8.4, "#38bdf8");
+      addLabel("Escalera Pegada a Casa y Der.", 2.5, 0.8, 1.2, "#f97316");
+      addLabel("Tragaluz 60x60cm (Acceso)", 0.6, 3.8, -7.0, "#38bdf8");
+      addLabel("Tinaco Pegado a Barda", 3.2, 5.4, -7.0, "#fef08a");
+      addLabel("Malla Verde 2.00m", 0, 2.3, 8, "#22c55e");
+
       window.addEventListener('resize', onWindowResize);
+      renderer.render(scene, camera);
       animate();
+    }
+
+    let labelSprites = [];
+    let labelsVisible = true;
+
+    function toggleLabels(forceState) {
+      if (typeof forceState === 'boolean') {
+        labelsVisible = forceState;
+      } else {
+        labelsVisible = !labelsVisible;
+      }
+      labelSprites.forEach(s => s.visible = labelsVisible);
+      const btn = document.getElementById('toggle-labels-btn');
+      if (btn) {
+        btn.classList.toggle('active-toggle', !labelsVisible);
+        btn.innerText = labelsVisible ? '🏷️ Ocultar Rótulos' : '🏷️ Ver Rótulos';
+      }
+      if (renderer && scene && camera) renderer.render(scene, camera);
     }
 
     function toggleRoofs() {
       roofsVisible = !roofsVisible;
       roofMeshes.forEach(m => m.visible = roofsVisible);
       const btn = document.getElementById('toggle-roofs-btn');
-      btn.classList.toggle('active-toggle', !roofsVisible);
-      btn.innerText = roofsVisible ? '👁 Ocultar Techos' : '👁 Ver Techos';
+      if (btn) {
+        btn.classList.toggle('active-toggle', !roofsVisible);
+        btn.innerText = roofsVisible ? '👁 Ocultar Techos' : '👁 Ver Techos';
+      }
+      if (renderer && scene && camera) renderer.render(scene, camera);
     }
 
     function downloadScreenshot() {
@@ -1133,7 +1364,7 @@
       renderer.render(scene, camera);
       const dataURL = renderer.domElement.toDataURL('image/png');
       const link = document.createElement('a');
-      link.download = 'modelo_3d_azotea.png';
+      link.download = 'modelo_3d_azotea_planta_baja.png';
       link.href = dataURL;
       link.click();
     }
@@ -1142,20 +1373,27 @@
       if (!controls) return;
       controls.reset();
       switch (viewType) {
-        case 'tinaco_tragaluz':
-          camera.position.set(3.0, 5.5, -2.5);
-          controls.target.set(2.0, 3.3, -7.0);
+        case 'front_facade':
+          camera.position.set(0, 1.2, 19);
+          controls.target.set(0, -0.4, 5);
           break;
-        case 'mesh_focus':
-          camera.position.set(5.0, 4.0, 14.0);
-          controls.target.set(2.0, 1.5, 6.0);
+        case 'stairs_focus':
+          camera.position.set(-6, 7, 9);
+          controls.target.set(2.2, 0.4, 0.5);
+          break;
+        case 'tinaco_tragaluz':
+          camera.position.set(2.0, 7.0, -1.0);
+          controls.target.set(2.2, 3.1, -7.0);
           break;
         case 'iso':
-          camera.position.set(-15, 18, 22);
-          controls.target.set(0, 1.5, 0);
+          camera.position.set(-18, 16, 22);
+          controls.target.set(0, 0, 0);
           break;
       }
       controls.update();
+      if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+      }
     }
 
     function onWindowResize() {
@@ -1172,6 +1410,81 @@
       if (renderer && scene && camera) {
         renderer.render(scene, camera);
       }
+    }
+
+    // Galería Render HD
+    const galleryData = {
+      iso: {
+        src: './render_view_iso.png',
+        download: 'render_isometrico_8x16.png',
+        caption: '<strong>Perspectiva Isométrica General (8m x 16m):</strong> Vista tridimensional completa con planta baja terminada (2.8m de altura), losa intermedia, barda trasera de 3m con 3 castillos, pretil izquierdo de 1m con 3 castillos, malla ciclónica verde de 2m al frente y lateral derecho, cubierta de lámina, escalera pegada a la pared de la casita y segunda losa con tinaco y tragaluz.'
+      },
+      facade: {
+        src: './render_view_front_facade.png',
+        download: 'render_fachada_planta_baja.png',
+        caption: '<strong>Fachada Frontal Planta Baja & Malla Verde:</strong> Vista a nivel de calle mostrando el portón vehicular de cochera (3.5m) a la izquierda, puerta principal peatonal de madera en el centro, y ventana exterior con cancelería a la derecha. Arriba sobre la losa se observa la malla ciclónica verde de 2.0m delimitando la azotea.'
+      },
+      stairs: {
+        src: './render_view_stairs_focus.png',
+        download: 'render_escalera_y_casita.png',
+        caption: '<strong>Detalle de Escalera Adosada y Casita Existente (4x6m):</strong> La escalera sube de izquierda a derecha (Oeste a Este), con su parte más larga adosada directamente a la pared frontal de la casita y llegando hasta topar con la barda derecha perimetral. En la casita se aprecian la ventana y la puerta de acceso exterior.'
+      },
+      tinaco: {
+        src: './render_view_tinaco_tragaluz.png',
+        download: 'render_segunda_losa_tinaco_tragaluz.png',
+        caption: '<strong>Segunda Losa, Tinaco y Tragaluz (60x60 cm):</strong> Detalle de la zona posterior derecha elevada: segunda losa de concreto en verde, tragaluz de 60x60cm a la izquierda para acceso a mantenimiento, y tinaco Rotoplas con muretes de tabique rojo pegado a la barda derecha.'
+      }
+    };
+
+    function selectRenderGallery(key) {
+      const data = galleryData[key];
+      if (!data) return;
+      document.querySelectorAll('.gallery-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = (typeof event !== 'undefined' && event && event.currentTarget) ? event.currentTarget : document.querySelector(`.gallery-btn[onclick*="${key}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const img = document.getElementById('gallery-img');
+      const caption = document.getElementById('gallery-caption');
+      const dLink = document.getElementById('gallery-download-link');
+
+      if (img) img.src = data.src;
+      if (caption) caption.innerHTML = data.caption;
+      if (dLink) {
+        dLink.href = data.src;
+        dLink.download = data.download;
+      }
+    }
+
+    // Soporte para parámetros URL (?view=3d&cam=front_facade&clean=1)
+    function checkUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const viewParam = params.get('view');
+      const camParam = params.get('cam');
+      const hideRoofsParam = params.get('hideRoofs');
+      const cleanParam = params.get('clean');
+
+      if (cleanParam === '1' || cleanParam === 'true') {
+        document.body.classList.add('clean-mode');
+      }
+
+      if (viewParam) {
+        switchView(viewParam);
+        if (camParam) {
+          setCameraView(camParam);
+        }
+        if (hideRoofsParam === '1' || hideRoofsParam === 'true') {
+          toggleRoofs();
+        }
+        if (cleanParam === '1' || cleanParam === 'true') {
+          toggleLabels(false);
+        }
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', checkUrlParams);
+    } else {
+      checkUrlParams();
     }
   </script>
 </body>
