@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Proyecto Azotea 8m x 16m - Visualizador 3D & 2D</title>
+  
+  <!-- Meta tags para visualización en teléfonos móviles (PWA / WebApp) -->
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Croquis 2D, modelo 3D y render fotorrealista de proyecto en azotea de 8m x 16m">
+
+  <!-- Librerías Three.js vía CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    :root {
+      --bg-main: #0a0d14;
+      --panel-bg: rgba(15, 23, 42, 0.96);
+      --border-color: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-orange: #f97316;
+      --accent-green: #22c55e;
+      --mesh-green: #15803d;
+      --tinaco-beige: #fef08a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh; /* Altura dinámica para celulares */
+      overflow: hidden;
+    }
+
+    /* Header y Navegación */
+    header {
+      background: #0f172a;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      z-index: 20;
+      flex-shrink: 0;
+      gap: 10px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title-group h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    .badge {
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      font-weight: 600;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .nav-tabs {
+      display: flex;
+      background: #020617;
+      border-radius: 8px;
+      padding: 2px;
+      border: 1px solid var(--border-color);
+      gap: 2px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      background: #2563eb;
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-info-toggle {
+      display: none; /* Se activa en móviles */
+      background: #334155;
+      border: 1px solid #475569;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Contenedor Principal */
+    main {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+      height: calc(100% - 50px);
+    }
+
+    .viewport {
+      flex: 1;
+      position: relative;
+      background: #020617;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      touch-action: none; /* Impide scroll involuntario al rotar 3D */
+    }
+
+    #view-2d, #view-3d, #view-render {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #view-2d {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      overflow: auto;
+    }
+
+    #view-3d {
+      display: none;
+      touch-action: none;
+    }
+
+    #view-render {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      background: #05070e;
+      overflow: auto;
+    }
+
+    #view-render img {
+      max-width: 98%;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      border: 1px solid #1e293b;
+      object-fit: contain;
+    }
+
+    /* Barra lateral en Desktop */
+    aside {
+      width: 380px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 10;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .section-box {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent-blue);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat-card {
+      background: rgba(2, 6, 23, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+
+    .stat-card .label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .stat-card .value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    /* Botones de cámara (Scroll horizontal en móvil) */
+    .camera-buttons {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 5;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .camera-buttons::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cam-btn {
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    .cam-btn:hover, .cam-btn:active {
+      background: #2563eb;
+      border-color: #3b82f6;
+    }
+
+    .cam-btn.active-toggle {
+      background: #059669;
+      border-color: #10b981;
+    }
+
+    .cam-btn.photo-btn {
+      background: #ea580c;
+      border-color: #f97316;
+    }
+
+    /* Indicaciones en pantalla */
+    .controls-overlay {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      background: rgba(2, 6, 23, 0.85);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      pointer-events: none;
+      backdrop-filter: blur(6px);
+      display: flex;
+      gap: 10px;
+    }
+
+    svg {
+      max-width: 98%;
+      max-height: 88vh;
+      filter: drop-shadow(0 15px 25px rgba(0,0,0,0.8));
+    }
+
+    .dim-text {
+      fill: #e2e8f0;
+      font-size: 11.5px;
+      font-weight: 600;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    /* ===================================================
+       RESPONSIVE PARA CELULARES (MÓVILES)
+       =================================================== */
+    @media (max-width: 768px) {
+      .title-group h1 {
+        font-size: 0.85rem;
+      }
+      .badge {
+        display: none; /* Oculta badge para ahorrar espacio en barra */
+      }
+      .btn-info-toggle {
+        display: flex; /* Muestra botón para abrir datos */
+      }
+      .controls-overlay {
+        font-size: 0.65rem;
+        padding: 4px 8px;
+        bottom: 8px;
+        left: 8px;
+      }
+      .controls-overlay span.desktop-only {
+        display: none;
+      }
+
+      /* Barra lateral se convierte en Modal / Bottom Sheet desplegable */
+      aside {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 75vh;
+        max-height: 80vh;
+        border-radius: 16px 16px 0 0;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.8);
+        transform: translateY(105%);
+        z-index: 50;
+      }
+
+      aside.open {
+        transform: translateY(0);
+      }
+
+      .mobile-sheet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+        background: #1e293b;
+        border-radius: 16px 16px 0 0;
+      }
+
+      .mobile-sheet-header h2 {
+        font-size: 0.9rem;
+        color: #fff;
+      }
+
+      .close-sheet-btn {
+        background: #334155;
+        border: none;
+        color: #fff;
+        font-size: 1rem;
+        padding: 4px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .sheet-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 40;
+      }
+
+      .sheet-backdrop.open {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Backdrop para celular cuando se abre la barra de información -->
+  <div class="sheet-backdrop" id="sheetBackdrop" onclick="toggleSidebar(false)"></div>
+
+  <header>
+    <div class="title-group">
+      <h1>Azotea 8m x 16m</h1>
+      <span class="badge">Norte-Sur</span>
+    </div>
+
+    <!-- Pestañas de Vista -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchView('2d')">
+        2D Plano
+      </button>
+      <button class="tab-btn" onclick="switchView('3d')">
+        3D Modelo
+      </button>
+      <button class="tab-btn" onclick="switchView('render')">
+        🖼️ Render HD
+      </button>
+    </div>
+
+    <!-- Botón en móvil para abrir información -->
+    <button class="btn-info-toggle" onclick="toggleSidebar(true)">
+      📋 Info
+    </button>
+  </header>
+
+  <main>
+    <div class="viewport">
+      <!-- 1. VISTA 2D -->
+      <div id="view-2d">
+        <svg viewBox="0 0 860 1200" id="svg-plan">
+          <defs>
+            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+            </pattern>
+            <pattern id="greenConcreteHatch" width="12" height="12" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="12" stroke="#22c55e" stroke-width="2.5" opacity="0.75"/>
+            </pattern>
+            <pattern id="sheetHatch" width="8" height="8" patternUnits="userSpaceOnUse">
+              <line x1="4" y1="0" x2="4" y2="8" stroke="#38bdf8" stroke-width="1.5" opacity="0.5"/>
+            </pattern>
+            <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#94a3b8" />
+            </marker>
+            <marker id="arrowOrange" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f97316" />
+            </marker>
+          </defs>
+
+          <rect width="100%" height="100%" fill="#070a13" />
+          <rect width="100%" height="100%" fill="url(#grid)" />
+
+          <!-- Rosa de los vientos -->
+          <g transform="translate(750, 80)">
+            <circle cx="0" cy="0" r="26" fill="#111827" stroke="#374151" stroke-width="1.5"/>
+            <path d="M 0 -22 L 6 -3 L -6 -3 Z" fill="#ef4444" />
+            <path d="M 0 22 L 6 3 L -6 3 Z" fill="#9ca3af" />
+            <path d="M -22 0 L -3 -6 L -3 6 Z" fill="#9ca3af" />
+            <path d="M 22 0 L 3 -6 L 3 6 Z" fill="#9ca3af" />
+            <text x="0" y="-8" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">N (Fondo)</text>
+            <text x="0" y="38" text-anchor="middle" font-size="10" font-weight="bold" fill="#9ca3af">S (Frente)</text>
+            <text x="-32" y="4" text-anchor="middle" font-size="9" font-weight="bold" fill="#9ca3af">O</text>
+            <text x="32" y="4" text-anchor="middle" font-size="9" font-weight="bold" fill="#9ca3af">E</text>
+          </g>
+
+          <!-- LOSA BASE (8m x 16m) -->
+          <rect x="200" y="160" width="400" height="800" fill="#1e293b" stroke="#334155" stroke-width="2" rx="4"/>
+
+          <!-- ZONA POSTERIOR (NORTE: 2.00m) -->
+          <!-- Cachito de lámina (Oeste, 4x2m) -->
+          <rect x="200" y="160" width="200" height="100" fill="rgba(56, 189, 248, 0.15)" stroke="#38bdf8" stroke-width="1.5"/>
+          <rect x="200" y="160" width="200" height="100" fill="url(#sheetHatch)"/>
+          <text x="300" y="205" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="bold">
+            CACHITO DE LÁMINA (4x2m)
+          </text>
+
+          <!-- Doble losa verde (Este, 4x2m) -->
+          <rect x="400" y="160" width="200" height="100" fill="rgba(34, 197, 94, 0.3)" stroke="#22c55e" stroke-width="3"/>
+          <rect x="400" y="160" width="200" height="100" fill="url(#greenConcreteHatch)"/>
+
+          <!-- Tragaluz 60x60cm -->
+          <rect x="425" y="195" width="30" height="30" fill="#38bdf8" stroke="#fff" stroke-width="2" rx="2"/>
+          <line x1="425" y1="195" x2="455" y2="225" stroke="#fff" stroke-width="1.5"/>
+          <line x1="425" y1="225" x2="455" y2="195" stroke="#fff" stroke-width="1.5"/>
+          <text x="440" y="182" text-anchor="middle" fill="#38bdf8" font-size="9" font-weight="bold">
+            TRAGALUZ
+          </text>
+          <text x="440" y="238" text-anchor="middle" fill="#7dd3fc" font-size="8">
+            60x60 cm
+          </text>
+
+          <!-- Tinaco a la derecha -->
+          <rect x="515" y="180" width="60" height="60" fill="#b45309" stroke="#fff" stroke-width="1.2" rx="3"/>
+          <circle cx="545" cy="210" r="24" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5"/>
+          <circle cx="545" cy="210" r="8" fill="#1e293b" stroke="#fff" stroke-width="1"/>
+          
+          <text x="545" y="173" text-anchor="middle" fill="#fef08a" font-size="10" font-weight="bold">
+            TINACO
+          </text>
+          <text x="545" y="246" text-anchor="middle" fill="#fef08a" font-size="8">
+            Pegado a barda
+          </text>
+
+          <!-- Techado de lámina continuo de 0 a 14m -->
+          <rect x="200" y="260" width="400" height="700" fill="rgba(56, 189, 248, 0.05)" stroke="#0284c7" stroke-width="1.5" stroke-dasharray="6, 4"/>
+          <rect x="200" y="260" width="400" height="700" fill="url(#sheetHatch)" opacity="0.3"/>
+
+          <!-- Cuarto existente (4x6m) -->
+          <rect x="400" y="260" width="200" height="300" fill="rgba(30, 41, 59, 0.85)" stroke="#64748b" stroke-width="2"/>
+          <text x="500" y="390" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="bold">
+            CUARTO EXISTENTE
+          </text>
+          <text x="500" y="412" text-anchor="middle" fill="#cbd5e1" font-size="11">
+            (4.00m x 6.00m)
+          </text>
+
+          <!-- Ventana y Puerta en pared izquierda -->
+          <rect x="394" y="320" width="12" height="60" fill="#38bdf8" stroke="#fff" stroke-width="1.5"/>
+          <text x="365" y="355" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="bold" transform="rotate(-90 365 355)">
+            VENTANA
+          </text>
+          <rect x="393" y="460" width="14" height="60" fill="#10b981" stroke="#fff" stroke-width="1.5"/>
+          <text x="365" y="495" text-anchor="middle" fill="#34d399" font-size="10" font-weight="bold" transform="rotate(-90 365 495)">
+            PUERTA
+          </text>
+
+          <!-- Escalera transversal -->
+          <g id="stairs-group">
+            <rect x="340" y="580" width="220" height="70" fill="rgba(249, 115, 22, 0.2)" stroke="#f97316" stroke-width="2"/>
+            <line x1="362" y1="580" x2="362" y2="650" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="384" y1="580" x2="384" y2="650" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="406" y1="580" x2="406" y2="650" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="428" y1="580" x2="428" y2="650" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="450" y1="580" x2="450" y2="650" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="472" y1="580" x2="472" y2="650" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="494" y1="580" x2="494" y2="650" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="516" y1="580" x2="516" y2="650" stroke="#f97316" stroke-width="1.5"/>
+            <line x1="538" y1="580" x2="538" y2="650" stroke="#f97316" stroke-width="1.5"/>
+
+            <line x1="350" y1="615" x2="545" y2="615" stroke="#f97316" stroke-width="3" marker-end="url(#arrowOrange)"/>
+            <text x="450" y="675" text-anchor="middle" fill="#fb923c" font-size="11" font-weight="bold">
+              SUBE ESCALERA A LA LOSA (Oeste -> Este)
+            </text>
+          </g>
+
+          <!-- Muros y Castillos a nivel -->
+          <line x1="200" y1="160" x2="600" y2="160" stroke="#ef4444" stroke-width="8" stroke-linecap="round"/>
+          <text x="400" y="146" text-anchor="middle" fill="#f87171" font-size="11" font-weight="bold">
+            MURO FONDO: 8.00m (ALTO: 3.00m)
+          </text>
+          <rect x="190" y="150" width="20" height="20" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>
+          <rect x="390" y="150" width="20" height="20" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>
+          <rect x="590" y="150" width="20" height="20" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>
+
+          <line x1="600" y1="160" x2="600" y2="260" stroke="#ef4444" stroke-width="8" stroke-linecap="round"/>
+          <line x1="200" y1="160" x2="200" y2="960" stroke="#eab308" stroke-width="6" stroke-linecap="round"/>
+          <rect x="190" y="350" width="20" height="20" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>
+          <rect x="190" y="550" width="20" height="20" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>
+          <rect x="190" y="750" width="20" height="20" fill="#f59e0b" stroke="#fff" stroke-width="1.5"/>
+
+          <!-- Malla verde en frente y lateral derecho -->
+          <line x1="200" y1="960" x2="600" y2="960" stroke="#16a34a" stroke-width="8" stroke-dasharray="8, 4"/>
+          <line x1="600" y1="560" x2="600" y2="960" stroke="#16a34a" stroke-width="8" stroke-dasharray="8, 4"/>
+          <text x="400" y="991" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="bold">
+            MALLA VERDE DE ALAMBRE (ALTO: 2.00 m)
+          </text>
+
+          <!-- Cotas -->
+          <g transform="translate(0, 105)">
+            <line x1="200" y1="0" x2="600" y2="0" stroke="#94a3b8" stroke-width="1.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+            <text x="400" y="-10" class="dim-text">ANCHO TOTAL: 8.00 m</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- 2. VISTA 3D INTERACTIVA -->
+      <div id="view-3d">
+        <div class="camera-buttons">
+          <button class="cam-btn" onclick="setCameraView('tinaco_tragaluz')">★ Tragaluz y Tinaco</button>
+          <button class="cam-btn" onclick="setCameraView('mesh_focus')">Malla Verde (2m)</button>
+          <button class="cam-btn" onclick="setCameraView('iso')">Perspectiva General</button>
+          <button class="cam-btn" id="toggle-roofs-btn" onclick="toggleRoofs()">👁 Ocultar Techos</button>
+          <button class="cam-btn photo-btn" onclick="downloadScreenshot()">📸 Guardar Foto</button>
+        </div>
+
+        <div class="controls-overlay">
+          <span>👆 <strong>1 Dedo:</strong> Rotar</span>
+          <span>✌️ <strong>2 Dedos:</strong> Zoom</span>
+          <span class="desktop-only">🖱️ <strong>Clic Der:</strong> Mover</span>
+        </div>
+      </div>
+
+      <!-- 3. VISTA RENDER HD (Fotorrealista) -->
+      <div id="view-render">
+        <img src="./render_3d_arquitectonico_puro.jpg" alt="Render 3D Arquitectónico Puro" loading="lazy">
+      </div>
+    </div>
+
+    <!-- Barra lateral (Desktop) / Bottom Sheet (Celular) -->
+    <aside id="infoSidebar">
+      <div class="mobile-sheet-header">
+        <h2>Especificaciones Técnicas</h2>
+        <button class="close-sheet-btn" onclick="toggleSidebar(false)">✕</button>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">
+          Dimensiones Principales
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="label">Losa Total</div>
+            <div class="value">8.00 x 16.00 m</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Techado Lámina</div>
+            <div class="value" style="color: #38bdf8;">14.00 m largo</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Malla Verde</div>
+            <div class="value" style="color: #4ade80;">Alto: 2.00 m</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Tragaluz Acceso</div>
+            <div class="value" style="color: #38bdf8;">60 x 60 cm</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-title">
+          Instalaciones y Muros
+        </div>
+        <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.5;">
+          • <strong>Tinaco Rotoplas:</strong> Sobre muretes de tabique rojo en el extremo derecho de la 2da losa, pegado a la barda.<br><br>
+          • <strong>Tragaluz 60x60cm:</strong> En el lado izquierdo de la losa verde para subida y mantenimiento.<br><br>
+          • <strong>Castillos a Nivel:</strong> 3 en el muro izquierdo (enrasados a 1m cada 4m) y 3 en el muro posterior (enrasados a 3m).<br><br>
+          • <strong>Malla de Alambre (2m):</strong> Delimitando el frente y el lateral derecho de forma segura.
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    let currentView = '2d';
+    function switchView(view) {
+      currentView = view;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      
+      const view2D = document.getElementById('view-2d');
+      const view3D = document.getElementById('view-3d');
+      const viewRender = document.getElementById('view-render');
+
+      // Ocultar todos
+      view2D.style.display = 'none';
+      view3D.style.display = 'none';
+      viewRender.style.display = 'none';
+
+      if (view === '2d') {
+        event.currentTarget.classList.add('active');
+        view2D.style.display = 'flex';
+      } else if (view === '3d') {
+        event.currentTarget.classList.add('active');
+        view3D.style.display = 'block';
+        if (!threeInitialized) {
+          initThree();
+        }
+        onWindowResize();
+      } else if (view === 'render') {
+        event.currentTarget.classList.add('active');
+        viewRender.style.display = 'flex';
+      }
+    }
+
+    function toggleSidebar(open) {
+      const sidebar = document.getElementById('infoSidebar');
+      const backdrop = document.getElementById('sheetBackdrop');
+      if (open) {
+        sidebar.classList.add('open');
+        backdrop.classList.add('open');
+      } else {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('open');
+      }
+    }
+
+    // Texturas Procedimentales
+    function generateCinderBlockTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(0, 0, 512, 512);
+
+      for (let i = 0; i < 20000; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const c = Math.floor(Math.random() * 40) + 85;
+        ctx.fillStyle = `rgb(${c},${c},${c})`;
+        ctx.fillRect(x, y, 2, 2);
+      }
+
+      const rows = 16;
+      const cols = 8;
+      const rowHeight = 512 / rows;
+      const colWidth = 512 / cols;
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#334155';
+
+      for (let r = 0; r <= rows; r++) {
+        const y = r * rowHeight;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(512, y);
+        ctx.stroke();
+
+        const offset = (r % 2) * (colWidth / 2);
+        for (let c = 0; c <= cols + 1; c++) {
+          const x = c * colWidth - offset;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + rowHeight);
+          ctx.stroke();
+        }
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      return texture;
+    }
+
+    function generateCorrugatedSheetTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+
+      const gradient = ctx.createLinearGradient(0, 0, 256, 0);
+      const stripes = 16;
+      for (let i = 0; i <= stripes; i++) {
+        const t = i / stripes;
+        const color = (i % 2 === 0) ? '#94a3b8' : '#e2e8f0';
+        gradient.addColorStop(t, color);
+      }
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 256, 256);
+
+      for (let i = 0; i < 3000; i++) {
+        ctx.fillStyle = `rgba(71,85,105,${Math.random() * 0.15})`;
+        ctx.fillRect(Math.random() * 256, Math.random() * 256, 3, 3);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      return texture;
+    }
+
+    function generateWireMeshTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+
+      ctx.clearRect(0, 0, 128, 128);
+      ctx.strokeStyle = '#16a34a';
+      ctx.lineWidth = 3;
+
+      ctx.beginPath();
+      ctx.moveTo(0, 64);
+      ctx.lineTo(64, 0);
+      ctx.lineTo(128, 64);
+      ctx.lineTo(64, 128);
+      ctx.closePath();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(128, 128);
+      ctx.moveTo(128, 0);
+      ctx.lineTo(0, 128);
+      ctx.stroke();
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(16, 4);
+      return texture;
+    }
+
+    let scene, camera, renderer, controls;
+    let threeInitialized = false;
+    let roofsVisible = true;
+    const roofMeshes = [];
+
+    function initThree() {
+      threeInitialized = true;
+      const container = document.getElementById('view-3d');
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0a0f1d);
+
+      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+      camera.position.set(-15, 18, 22);
+
+      // Renderizador optimizado para pantallas Retina de celular
+      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(width, height);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.target.set(0, 1.5, 0);
+
+      // Luces
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+      scene.add(ambientLight);
+
+      const sunLight = new THREE.DirectionalLight(0xfff7ed, 0.95);
+      sunLight.position.set(18, 30, 20);
+      sunLight.castShadow = true;
+      sunLight.shadow.mapSize.width = 2048;
+      sunLight.shadow.mapSize.height = 2048;
+      scene.add(sunLight);
+
+      const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.35);
+      fillLight.position.set(-20, 15, -15);
+      scene.add(fillLight);
+
+      const gridHelper = new THREE.GridHelper(34, 34, 0x1e293b, 0x0f172a);
+      gridHelper.position.y = -0.01;
+      scene.add(gridHelper);
+
+      const blockTex = generateCinderBlockTexture();
+      blockTex.repeat.set(4, 3);
+      const blockMat = new THREE.MeshStandardMaterial({ map: blockTex, roughness: 0.9 });
+
+      const blockParapetTex = generateCinderBlockTexture();
+      blockParapetTex.repeat.set(8, 1);
+      const blockParapetMat = new THREE.MeshStandardMaterial({ map: blockParapetTex, roughness: 0.9 });
+
+      const sheetTex = generateCorrugatedSheetTexture();
+      sheetTex.repeat.set(16, 12);
+      const sheetMat = new THREE.MeshStandardMaterial({ map: sheetTex, roughness: 0.35, metalness: 0.75 });
+      const pipeMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.3 });
+
+      const greenSlabMat = new THREE.MeshStandardMaterial({ 
+        color: 0x22c55e, 
+        roughness: 0.7, 
+        transparent: true, 
+        opacity: 0.92 
+      });
+
+      // 1. Losa base
+      const baseMain = new THREE.Mesh(new THREE.BoxGeometry(8, 0.25, 14), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 }));
+      baseMain.position.set(0, -0.125, 1);
+      baseMain.receiveShadow = true;
+      scene.add(baseMain);
+
+      const baseBackLeft = new THREE.Mesh(new THREE.BoxGeometry(4, 0.25, 2), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 }));
+      baseBackLeft.position.set(-2, -0.125, -7);
+      baseBackLeft.receiveShadow = true;
+      scene.add(baseBackLeft);
+
+      // Losa inferior en verde
+      const lowerGreenSlab = new THREE.Mesh(new THREE.BoxGeometry(3.96, 0.25, 1.96), greenSlabMat);
+      lowerGreenSlab.position.set(2, -0.125, -7);
+      lowerGreenSlab.receiveShadow = true;
+      scene.add(lowerGreenSlab);
+
+      // 2. Muro fondo 8m x 3m
+      const wallBack = new THREE.Mesh(new THREE.BoxGeometry(8, 3, 0.24), blockMat);
+      wallBack.position.set(0, 1.5, -8 + 0.12);
+      wallBack.castShadow = true;
+      wallBack.receiveShadow = true;
+      scene.add(wallBack);
+
+      // 3. 3 Castillos fondo (3m)
+      const castMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 });
+      function addFlushCastillo(x, z, h) {
+        const c = new THREE.Mesh(new THREE.BoxGeometry(0.28, h, 0.28), castMat);
+        c.position.set(x, h/2, z);
+        c.castShadow = true;
+        scene.add(c);
+      }
+      addFlushCastillo(-4 + 0.14, -8 + 0.14, 3.0);
+      addFlushCastillo(0, -8 + 0.14, 3.0);
+      addFlushCastillo(4 - 0.14, -8 + 0.14, 3.0);
+
+      // 4. Muro derecho en 2m
+      const wallRight2m = new THREE.Mesh(new THREE.BoxGeometry(0.24, 3, 2), blockMat);
+      wallRight2m.position.set(4 - 0.12, 1.5, -7);
+      wallRight2m.castShadow = true;
+      scene.add(wallRight2m);
+
+      // 5. Muro izquierdo 16m x 1m con 3 castillos
+      const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.0, 16), blockParapetMat);
+      wallLeft.position.set(-4 + 0.1, 0.5, 0);
+      wallLeft.castShadow = true;
+      scene.add(wallLeft);
+
+      addFlushCastillo(-4 + 0.12, -4, 1.0);
+      addFlushCastillo(-4 + 0.12, 0, 1.0);
+      addFlushCastillo(-4 + 0.12, 4, 1.0);
+
+      // 6. Malla Verde 2.0m
+      const meshTex = generateWireMeshTexture();
+      const greenMeshMat = new THREE.MeshStandardMaterial({
+        map: meshTex,
+        color: 0x15803d,
+        roughness: 0.4,
+        metalness: 0.3,
+        transparent: true,
+        opacity: 0.85,
+        side: THREE.DoubleSide
+      });
+      const greenPostMat = new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.5, metalness: 0.6 });
+      function createFencePost(x, z, h = 2.0) {
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, h, 16), greenPostMat);
+        post.position.set(x, h/2, z);
+        post.castShadow = true;
+        return post;
+      }
+
+      const frontMesh = new THREE.Mesh(new THREE.PlaneGeometry(8, 2.0), greenMeshMat);
+      frontMesh.position.set(0, 1.0, 8 - 0.02);
+      scene.add(frontMesh);
+      for (let x = -4; x <= 4; x += 2) {
+        scene.add(createFencePost(x, 8 - 0.02, 2.0));
+      }
+      const frontRail = new THREE.Mesh(new THREE.BoxGeometry(8, 0.04, 0.04), greenPostMat);
+      frontRail.position.set(0, 2.0, 8 - 0.02);
+      scene.add(frontRail);
+
+      const rightMesh = new THREE.Mesh(new THREE.PlaneGeometry(8, 2.0), greenMeshMat);
+      rightMesh.rotation.y = Math.PI / 2;
+      rightMesh.position.set(4 - 0.02, 1.0, 4);
+      scene.add(rightMesh);
+      for (let z = 0; z <= 8; z += 2) {
+        scene.add(createFencePost(4 - 0.02, z, 2.0));
+      }
+      const rightRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 8), greenPostMat);
+      rightRail.position.set(4 - 0.02, 2.0, 4);
+      scene.add(rightRail);
+
+      // 7. Cuarto existente (4x6m)
+      const roomGroup = new THREE.Group();
+      const plasterMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.7 });
+
+      const rRight = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 6), plasterMat);
+      rRight.position.set(4 - 0.09, 1.3, -3);
+      roomGroup.add(rRight);
+
+      const rBack = new THREE.Mesh(new THREE.BoxGeometry(4, 2.6, 0.18), plasterMat);
+      rBack.position.set(2, 1.3, -6 + 0.09);
+      roomGroup.add(rBack);
+
+      const rFront = new THREE.Mesh(new THREE.BoxGeometry(4, 2.6, 0.18), plasterMat);
+      rFront.position.set(2, 1.3, 0 - 0.09);
+      roomGroup.add(rFront);
+
+      const rL1 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 1.5), plasterMat);
+      rL1.position.set(0.09, 1.3, -5.25);
+      roomGroup.add(rL1);
+
+      const winMesh = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.2, 1.35), new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, transparent: true, opacity: 0.65 }));
+      winMesh.position.set(0.09, 1.6, -3.8);
+      roomGroup.add(winMesh);
+
+      const rLWinBot = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.0, 1.4), plasterMat);
+      rLWinBot.position.set(0.09, 0.5, -3.8);
+      roomGroup.add(rLWinBot);
+
+      const rLWinTop = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.4, 1.4), plasterMat);
+      rLWinTop.position.set(0.09, 2.4, -3.8);
+      roomGroup.add(rLWinTop);
+
+      const rL2 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 1.3), plasterMat);
+      rL2.position.set(0.09, 1.3, -2.45);
+      roomGroup.add(rL2);
+
+      const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.1, 0.95), new THREE.MeshStandardMaterial({ color: 0x065f46, roughness: 0.4 }));
+      doorMesh.position.set(0.09, 1.05, -1.3);
+      roomGroup.add(doorMesh);
+
+      const rLDoorTop = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.5, 1.0), plasterMat);
+      rLDoorTop.position.set(0.09, 2.35, -1.3);
+      roomGroup.add(rLDoorTop);
+
+      const rL3 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.6, 0.8), plasterMat);
+      rL3.position.set(0.09, 1.3, -0.4);
+      roomGroup.add(rL3);
+
+      scene.add(roomGroup);
+
+      // 8. Escalera transversal
+      const stairsGroup = new THREE.Group();
+      const numSteps = 12;
+      const stepRun = 0.28;
+      const stepW = 1.1;
+      const stepRise = 0.18;
+
+      for (let i = 0; i < numSteps; i++) {
+        const step = new THREE.Mesh(new THREE.BoxGeometry(stepRun, stepRise, stepW), new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 }));
+        step.position.set(-1.2 + i * stepRun, i * stepRise - (numSteps * stepRise) + stepRise/2, 1.0);
+        step.castShadow = true;
+        step.receiveShadow = true;
+        stairsGroup.add(step);
+      }
+
+      const railMat = new THREE.MeshStandardMaterial({ color: 0xf97316, metalness: 0.6 });
+      const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.9), railMat);
+      p1.position.set(-1.2, 0.45, 1.55);
+      stairsGroup.add(p1);
+      const p2 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.9), railMat);
+      p2.position.set(2.0, 0.45, 1.55);
+      stairsGroup.add(p2);
+      scene.add(stairsGroup);
+
+      // 9. Techumbre general (14m)
+      const mainRoof = new THREE.Mesh(new THREE.BoxGeometry(8.1, 0.06, 14.1), sheetMat);
+      mainRoof.position.set(0, 2.75, 1.0);
+      mainRoof.rotation.x = -0.015;
+      scene.add(mainRoof);
+      roofMeshes.push(mainRoof);
+
+      // 10. Sobrante trasero
+      const extraSheet = new THREE.Mesh(new THREE.BoxGeometry(4.1, 0.06, 2.1), sheetMat);
+      extraSheet.position.set(-2, 2.7, -7);
+      extraSheet.rotation.x = -0.02;
+      scene.add(extraSheet);
+      roofMeshes.push(extraSheet);
+
+      // 11. Segunda losa verde con TRAGALUZ DE 60x60 CM
+      const slab2ndGroup = new THREE.Group();
+      const slabRight = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.22, 2.0), greenSlabMat);
+      slabRight.position.set(2.6, 2.9, -7);
+      slabRight.castShadow = true;
+      slab2ndGroup.add(slabRight);
+
+      const slabLeftBack = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.22, 0.7), greenSlabMat);
+      slabLeftBack.position.set(0.6, 2.9, -7.65);
+      slab2ndGroup.add(slabLeftBack);
+
+      const slabLeftFront = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.22, 0.7), greenSlabMat);
+      slabLeftFront.position.set(0.6, 2.9, -6.35);
+      slab2ndGroup.add(slabLeftFront);
+
+      // Brocal y domo del tragaluz
+      const curb = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.12, 0.72), new THREE.MeshStandardMaterial({ color: 0x475569 }));
+      curb.position.set(0.6, 3.05, -7.0);
+      slab2ndGroup.add(curb);
+
+      const dome = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.08, 0.64), new THREE.MeshStandardMaterial({ color: 0x7dd3fc, roughness: 0.1, transparent: true, opacity: 0.75 }));
+      dome.position.set(0.6, 3.12, -7.0);
+      slab2ndGroup.add(dome);
+
+      scene.add(slab2ndGroup);
+      roofMeshes.push(slab2ndGroup);
+
+      // 12. Tinaco pegado a la derecha
+      const tinacoGroup = new THREE.Group();
+      const brickMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.9 });
+      const murete1 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.6, 1.1), brickMat);
+      murete1.position.set(-0.35, 0.3, 0);
+      tinacoGroup.add(murete1);
+
+      const murete2 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.6, 1.1), brickMat);
+      murete2.position.set(0.35, 0.3, 0);
+      tinacoGroup.add(murete2);
+
+      const discMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 });
+      const baseDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 0.08, 32), discMat);
+      baseDisc.position.set(0, 0.64, 0);
+      tinacoGroup.add(baseDisc);
+
+      const tinacoMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.35 });
+      const tankBody = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.15, 32), tinacoMat);
+      tankBody.position.set(0, 1.25, 0);
+      tinacoGroup.add(tankBody);
+
+      const tankShoulder = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.55, 0.25, 32), tinacoMat);
+      tankShoulder.position.set(0, 1.9, 0);
+      tinacoGroup.add(tankShoulder);
+
+      const tankNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.1, 32), tinacoMat);
+      tankNeck.position.set(0, 2.05, 0);
+      tinacoGroup.add(tankNeck);
+
+      const tankLid = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.05, 32), new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.4 }));
+      tankLid.position.set(0, 2.12, 0);
+      tinacoGroup.add(tankLid);
+
+      tinacoGroup.position.set(3.15, 3.01, -7.0);
+      scene.add(tinacoGroup);
+      roofMeshes.push(tinacoGroup);
+
+      window.addEventListener('resize', onWindowResize);
+      animate();
+    }
+
+    function toggleRoofs() {
+      roofsVisible = !roofsVisible;
+      roofMeshes.forEach(m => m.visible = roofsVisible);
+      const btn = document.getElementById('toggle-roofs-btn');
+      btn.classList.toggle('active-toggle', !roofsVisible);
+      btn.innerText = roofsVisible ? '👁 Ocultar Techos' : '👁 Ver Techos';
+    }
+
+    function downloadScreenshot() {
+      if (!renderer) return;
+      renderer.render(scene, camera);
+      const dataURL = renderer.domElement.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = 'modelo_3d_azotea.png';
+      link.href = dataURL;
+      link.click();
+    }
+
+    function setCameraView(viewType) {
+      if (!controls) return;
+      controls.reset();
+      switch (viewType) {
+        case 'tinaco_tragaluz':
+          camera.position.set(3.0, 5.5, -2.5);
+          controls.target.set(2.0, 3.3, -7.0);
+          break;
+        case 'mesh_focus':
+          camera.position.set(5.0, 4.0, 14.0);
+          controls.target.set(2.0, 1.5, 6.0);
+          break;
+        case 'iso':
+          camera.position.set(-15, 18, 22);
+          controls.target.set(0, 1.5, 0);
+          break;
+      }
+      controls.update();
+    }
+
+    function onWindowResize() {
+      if (!renderer || !camera) return;
+      const container = document.getElementById('view-3d');
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (controls) controls.update();
+      if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+      }
+    }
+  </script>
+</body>
+</html>
